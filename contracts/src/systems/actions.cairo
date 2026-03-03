@@ -1,118 +1,227 @@
-use dojo_starter::models::{Direction, Position};
-
-// define the interface
 #[starknet::interface]
 pub trait IActions<T> {
-    fn spawn(ref self: T);
-    fn move(ref self: T, direction: Direction);
+    fn spawn_world(ref self: T);
+    fn propose_trade(
+        ref self: T,
+        from_civ: u32,
+        to_civ: u32,
+        offer_resource: felt252,
+        offer_amount: u32,
+        request_resource: felt252,
+        request_amount: u32,
+    );
+    fn accept_trade(ref self: T, trade_id: u32);
+    fn reject_trade(ref self: T, trade_id: u32);
+    fn tick(ref self: T);
 }
 
-// dojo decorator
 #[dojo::contract]
 pub mod actions {
-    use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
-    use dojo_starter::models::{Moves, Vec2};
-    use starknet::{ContractAddress, get_caller_address};
-    use super::{Direction, IActions, Position, next_position};
+    use dojo_starter::models::{Civilization, TradeProposal, WorldState};
+    use super::IActions;
 
-    #[derive(Copy, Drop, Serde)]
-    #[dojo::event]
-    pub struct Moved {
-        #[key]
-        pub player: ContractAddress,
-        pub direction: Direction,
+    fn get_resource(civ: @Civilization, resource: felt252) -> u32 {
+        if resource == 'iron' {
+            *civ.iron
+        } else if resource == 'food' {
+            *civ.food
+        } else if resource == 'wood' {
+            *civ.wood
+        } else {
+            0
+        }
+    }
+
+    fn set_resource(ref civ: Civilization, resource: felt252, amount: u32) {
+        if resource == 'iron' {
+            civ.iron = amount;
+        } else if resource == 'food' {
+            civ.food = amount;
+        } else if resource == 'wood' {
+            civ.wood = amount;
+        }
     }
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
-        fn spawn(ref self: ContractState) {
-            // Get the default world.
+        fn spawn_world(ref self: ContractState) {
             let mut world = self.world_default();
 
-            // Get the address of the current caller, possibly the player's address.
-            let player = get_caller_address();
-            // Retrieve the player's current position from the world.
-            let position: Position = world.read_model(player);
+            // Check not already initialized
+            let ws: WorldState = world.read_model(1_u32);
+            assert(!ws.is_initialized, 'World already initialized');
 
-            // Update the world state with the new data.
-
-            // 1. Move the player's position 10 units in both the x and y direction.
-            let new_position = Position {
-                player, vec: Vec2 { x: position.vec.x + 10, y: position.vec.y + 10 },
+            // Civilization A: Iron Kingdom - iron-rich, food-poor
+            let civ_a = Civilization {
+                id: 1,
+                name: 'Iron Kingdom',
+                iron: 100,
+                food: 20,
+                wood: 50,
+                population: 100,
+                is_alive: true,
             };
 
-            // Write the new position to the world.
-            world.write_model(@new_position);
-
-            // 2. Set the player's remaining moves to 100.
-            let moves = Moves {
-                player, remaining: 100, last_direction: Option::None, can_move: true,
+            // Civilization B: Green Valley - food-rich, iron-poor
+            let civ_b = Civilization {
+                id: 2,
+                name: 'Green Valley',
+                iron: 20,
+                food: 100,
+                wood: 50,
+                population: 100,
+                is_alive: true,
             };
 
-            // Write the new moves to the world.
-            world.write_model(@moves);
+            let world_state = WorldState {
+                id: 1, tick: 0, trade_count: 0, is_initialized: true,
+            };
+
+            world.write_model(@civ_a);
+            world.write_model(@civ_b);
+            world.write_model(@world_state);
         }
 
-        // Implementation of the move function for the ContractState struct.
-        fn move(ref self: ContractState, direction: Direction) {
-            // Get the address of the current caller, possibly the player's address.
-
+        fn propose_trade(
+            ref self: ContractState,
+            from_civ: u32,
+            to_civ: u32,
+            offer_resource: felt252,
+            offer_amount: u32,
+            request_resource: felt252,
+            request_amount: u32,
+        ) {
             let mut world = self.world_default();
 
-            let player = get_caller_address();
+            // Validate civs exist and are alive
+            let from: Civilization = world.read_model(from_civ);
+            let to: Civilization = world.read_model(to_civ);
+            assert(from.is_alive, 'From civ is dead');
+            assert(to.is_alive, 'To civ is dead');
 
-            // Retrieve the player's current position and moves data from the world.
-            let position: Position = world.read_model(player);
-            let mut moves: Moves = world.read_model(player);
-            // if player hasn't spawn, read returns model default values. This leads to sub overflow
-            // afterwards.
-            // Plus it's generally considered as a good pratice to fast-return on matching
-            // conditions.
-            if !moves.can_move {
-                return;
+            // Check from_civ has enough resources
+            let available = get_resource(@from, offer_resource);
+            assert(available >= offer_amount, 'Not enough resources');
+
+            // Create trade proposal
+            let mut ws: WorldState = world.read_model(1_u32);
+            ws.trade_count += 1;
+
+            let trade = TradeProposal {
+                id: ws.trade_count,
+                from_civ,
+                to_civ,
+                offer_resource,
+                offer_amount,
+                request_resource,
+                request_amount,
+                status: 0, // pending
+            };
+
+            world.write_model(@trade);
+            world.write_model(@ws);
+        }
+
+        fn accept_trade(ref self: ContractState, trade_id: u32) {
+            let mut world = self.world_default();
+
+            let mut trade: TradeProposal = world.read_model(trade_id);
+            assert(trade.status == 0, 'Trade not pending');
+
+            let mut from_civ: Civilization = world.read_model(trade.from_civ);
+            let mut to_civ: Civilization = world.read_model(trade.to_civ);
+
+            // Verify both sides have resources
+            let from_has = get_resource(@from_civ, trade.offer_resource);
+            let to_has = get_resource(@to_civ, trade.request_resource);
+            assert(from_has >= trade.offer_amount, 'From civ lacks resources');
+            assert(to_has >= trade.request_amount, 'To civ lacks resources');
+
+            // Execute atomic swap
+            // From civ: lose offer, gain request
+            set_resource(ref from_civ, trade.offer_resource, from_has - trade.offer_amount);
+            let from_gains = get_resource(@from_civ, trade.request_resource);
+            set_resource(
+                ref from_civ, trade.request_resource, from_gains + trade.request_amount,
+            );
+
+            // To civ: lose request, gain offer
+            set_resource(ref to_civ, trade.request_resource, to_has - trade.request_amount);
+            let to_gains = get_resource(@to_civ, trade.offer_resource);
+            set_resource(ref to_civ, trade.offer_resource, to_gains + trade.offer_amount);
+
+            trade.status = 1; // accepted
+
+            world.write_model(@from_civ);
+            world.write_model(@to_civ);
+            world.write_model(@trade);
+        }
+
+        fn reject_trade(ref self: ContractState, trade_id: u32) {
+            let mut world = self.world_default();
+
+            let mut trade: TradeProposal = world.read_model(trade_id);
+            assert(trade.status == 0, 'Trade not pending');
+
+            trade.status = 2; // rejected
+            world.write_model(@trade);
+        }
+
+        fn tick(ref self: ContractState) {
+            let mut world = self.world_default();
+
+            let mut ws: WorldState = world.read_model(1_u32);
+            assert(ws.is_initialized, 'World not initialized');
+            ws.tick += 1;
+
+            // Each civ consumes food = population / 10
+            let mut civ_a: Civilization = world.read_model(1_u32);
+            let mut civ_b: Civilization = world.read_model(2_u32);
+
+            if civ_a.is_alive {
+                let food_cost = civ_a.population / 10;
+                if civ_a.food >= food_cost {
+                    civ_a.food -= food_cost;
+                } else {
+                    // Starvation: population decreases
+                    civ_a.food = 0;
+                    let pop_loss = food_cost - civ_a.food;
+                    if civ_a.population > pop_loss {
+                        civ_a.population -= pop_loss;
+                    } else {
+                        civ_a.population = 0;
+                        civ_a.is_alive = false;
+                    }
+                }
             }
 
-            // Deduct one from the player's remaining moves.
-            moves.remaining -= 1;
+            if civ_b.is_alive {
+                let food_cost = civ_b.population / 10;
+                if civ_b.food >= food_cost {
+                    civ_b.food -= food_cost;
+                } else {
+                    civ_b.food = 0;
+                    let pop_loss = food_cost - civ_b.food;
+                    if civ_b.population > pop_loss {
+                        civ_b.population -= pop_loss;
+                    } else {
+                        civ_b.population = 0;
+                        civ_b.is_alive = false;
+                    }
+                }
+            }
 
-            // Update the last direction the player moved in.
-            moves.last_direction = Option::Some(direction);
-
-            // Calculate the player's next position based on the provided direction.
-            let next = next_position(position, moves.last_direction);
-
-            // Write the new position to the world.
-            world.write_model(@next);
-
-            // Write the new moves to the world.
-            world.write_model(@moves);
-
-            // Emit an event to the world to notify about the player's move.
-            world.emit_event(@Moved { player, direction });
+            world.write_model(@civ_a);
+            world.write_model(@civ_b);
+            world.write_model(@ws);
         }
     }
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        /// Use the default namespace "dojo_starter". This function is handy since the ByteArray
-        /// can't be const.
         fn world_default(self: @ContractState) -> dojo::world::WorldStorage {
             self.world(@"dojo_starter")
         }
     }
-}
-
-// Define function like this:
-fn next_position(mut position: Position, direction: Option<Direction>) -> Position {
-    match direction {
-        Option::None => { return position; },
-        Option::Some(d) => match d {
-            Direction::Left => { position.vec.x -= 1; },
-            Direction::Right => { position.vec.x += 1; },
-            Direction::Up => { position.vec.y -= 1; },
-            Direction::Down => { position.vec.y += 1; },
-        },
-    }
-    position
 }
