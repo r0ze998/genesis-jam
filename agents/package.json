@@ -1,0 +1,12 @@
+{
+  "name": "genesis-jam-agents",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/engine.ts",
+    "start": "bun run src/engine.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  }
+}
