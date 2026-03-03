@@ -12,8 +12,9 @@ async function sozoExecute(entrypoint: string, calldata: string[] = []): Promise
   // calldata is space-separated after entrypoint
   const callString = [CONTRACT_TAG, entrypoint, ...calldata].join(" ");
   
-  const args = [
-    "sozo", "execute",
+  const sozoPath = "/Users/hiroprotagonist/.asdf/installs/sozo/1.8.6/bin/sozo";
+  const cmd = [
+    sozoPath, "execute",
     ...callString.split(" "),
     "--world", WORLD_ADDRESS,
     "--rpc-url", RPC_URL,
@@ -21,10 +22,17 @@ async function sozoExecute(entrypoint: string, calldata: string[] = []): Promise
     "--private-key", PRIVATE_KEY,
     "--wait",
   ];
+  const args = ["bash", "-c", cmd.join(" ")];
 
   try {
+    const contractsDir = "/Users/hiroprotagonist/.openclaw/workspace/genesis-jam/contracts";
     const proc = Bun.spawn(args, {
-      env: { ...process.env, PATH: `${process.env.HOME}/.asdf/shims:${process.env.HOME}/.asdf/bin:/opt/homebrew/bin:${process.env.PATH}` },
+      cwd: contractsDir,
+      env: { 
+        ...process.env, 
+        HOME: process.env.HOME || "/Users/hiroprotagonist",
+        PATH: `/Users/hiroprotagonist/.asdf/installs/sozo/1.8.6/bin:/Users/hiroprotagonist/.asdf/installs/scarb/2.13.1/bin:/opt/homebrew/bin:${process.env.PATH}`,
+      },
       stdout: "pipe",
       stderr: "pipe",
     });
