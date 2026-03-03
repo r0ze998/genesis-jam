@@ -38,12 +38,13 @@ async function sozoExecute(entrypoint: string, calldata: string[] = []): Promise
     });
     
     const exitCode = await proc.exited;
+    const stdout = await new Response(proc.stdout).text();
+    const stderr = await new Response(proc.stderr).text();
     if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text();
-      console.error(`sozo execute ${entrypoint} failed:`, stderr.slice(0, 200));
+      console.error(`sozo execute ${entrypoint} failed (code ${exitCode}):\nstdout: ${stdout.slice(0,200)}\nstderr: ${stderr.slice(0, 200)}`);
       return false;
     }
-    console.log(`✅ On-chain: ${entrypoint}(${calldata.join(",")})`);
+    console.log(`✅ On-chain: ${entrypoint}(${calldata.join(",")}) tx: ${stdout.trim().slice(0,80)}`);
     return true;
   } catch (e) {
     console.error(`sozo execute error:`, e);
