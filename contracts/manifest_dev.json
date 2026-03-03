@@ -33,14 +33,17 @@
   },
   "contracts": [
     {
-      "address": "0x1ae76ae877518f905b73b643d96731e71e6b848ba68824adb4f1a77760fc3c7",
-      "class_hash": "0x1e4e6be422f3800cb260624f990b0e0a8250217cbd3c79db6c90a8d0c8527a0",
+      "address": "0x7fa05b879c300824dca6d5d97c04fb812ed3ba47a319fb28573e6b66b5e310",
+      "class_hash": "0x6c2139c4d22d8509fa63addf3f4808e10c471bb9e0413acf7869b44a2593caf",
       "init_calldata": [],
       "tag": "dojo_starter-actions",
       "selector": "0x7a1c71029f2d0b38e3ac89b09931d08b6e48417e079c289ff19a8698d0cba33",
       "systems": [
-        "spawn",
-        "move",
+        "spawn_world",
+        "propose_trade",
+        "accept_trade",
+        "reject_trade",
+        "tick",
         "upgrade"
       ]
     }
@@ -50,101 +53,121 @@
     {
       "members": [
         {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress",
+          "name": "id",
+          "type": "core::integer::u32",
           "key": true
         },
         {
-          "name": "directions",
-          "type": "core::array::Array::<dojo_starter::models::Direction>",
-          "key": false
-        }
-      ],
-      "class_hash": "0x2559fd839331a03a9b36aa013a7a8b07d0c5f1ad5e011ff32e1f0d2d2c8bac0",
-      "tag": "dojo_starter-DirectionsAvailable",
-      "selector": "0x77844f1facb51e60e546a9832d56c6bd04fa23be4fd5b57290caae5e9a3c1e4"
-    },
-    {
-      "members": [
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress",
-          "key": true
-        },
-        {
-          "name": "remaining",
-          "type": "core::integer::u8",
+          "name": "name",
+          "type": "core::felt252",
           "key": false
         },
         {
-          "name": "last_direction",
-          "type": "core::option::Option::<dojo_starter::models::Direction>",
+          "name": "iron",
+          "type": "core::integer::u32",
           "key": false
         },
         {
-          "name": "can_move",
+          "name": "food",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "wood",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "population",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "is_alive",
           "type": "core::bool",
           "key": false
         }
       ],
-      "class_hash": "0x6a76fa6031748b3832fd5916ce4b4e7124c39f523c8e7b5d83da40cc93fc63d",
-      "tag": "dojo_starter-Moves",
-      "selector": "0x2a29373f1af8348bd366a990eb3a342ef2cbe5e85160539eaca3441a673f468"
+      "class_hash": "0x218eb54dcc23d56723ba57e76d2e028c5c2e209efb3b839a040dffd6d24c1ed",
+      "tag": "dojo_starter-Civilization",
+      "selector": "0x373e7b81c8df274dd5610aea7c29ce2b7172a523122273dc1665f1202fcf2b"
     },
     {
       "members": [
         {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress",
+          "name": "id",
+          "type": "core::integer::u32",
           "key": true
         },
         {
-          "name": "vec",
-          "type": "dojo_starter::models::Vec2",
+          "name": "from_civ",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "to_civ",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "offer_resource",
+          "type": "core::felt252",
+          "key": false
+        },
+        {
+          "name": "offer_amount",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "request_resource",
+          "type": "core::felt252",
+          "key": false
+        },
+        {
+          "name": "request_amount",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "status",
+          "type": "core::integer::u8",
           "key": false
         }
       ],
-      "class_hash": "0x1f7793c7abcd26a4fb648f883a947c8e6d74077b7161a008e1f1966b3b1f317",
-      "tag": "dojo_starter-Position",
-      "selector": "0x2ac8b4c190f7031b9fc44312e6b047a1dce0b3f2957c33a935ca7846a46dd5b"
+      "class_hash": "0x10e6294360f3c65c23e72d50ee63093c97f39818c651f04e612daca7d2ca371",
+      "tag": "dojo_starter-TradeProposal",
+      "selector": "0x7e11b28886881a551a8f0ce7256bde7b27910707467290d1c0a37fd168524ab"
     },
     {
       "members": [
         {
-          "name": "identity",
-          "type": "core::starknet::contract_address::ContractAddress",
+          "name": "id",
+          "type": "core::integer::u32",
           "key": true
         },
         {
-          "name": "position",
-          "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>",
+          "name": "tick",
+          "type": "core::integer::u32",
           "key": false
-        }
-      ],
-      "class_hash": "0x71686e5c13179d564fbb3fe4cf68ad197e2722a0869502cb3017e2cf70ffc3",
-      "tag": "dojo_starter-PositionCount",
-      "selector": "0x44e8e8c3aea54e97e01563cacc08abb4a8ce8c468cd4d3a332bca12bfc2290d"
-    }
-  ],
-  "events": [
-    {
-      "members": [
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress",
-          "key": true
         },
         {
-          "name": "direction",
-          "type": "dojo_starter::models::Direction",
+          "name": "trade_count",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "is_initialized",
+          "type": "core::bool",
           "key": false
         }
       ],
-      "class_hash": "0x1dc24a2235f0735e79b159a1ec312001651aee14281446b703b76b17b5dcf0c",
-      "tag": "dojo_starter-Moved",
-      "selector": "0x504403e5c02b6442527721fc464d9ea5fc8f1ee600ab5ccd5c0845d36fd45f1"
+      "class_hash": "0x25e235428556ccc3c65b6b3c6c0108d96aaae66e336ca688544327af7e91c5e",
+      "tag": "dojo_starter-WorldState",
+      "selector": "0x1f2998719bf5a8346738b99e9474c71c90488248fcf745268cd0921a82dfed8"
     }
   ],
+  "events": [],
   "external_contracts": [],
   "abis": [
     {
@@ -159,16 +182,6 @@
         {
           "name": "snapshot",
           "type": "@core::array::Array::<(core::felt252, dojo::meta::introspect::Ty)>"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "core::array::Span::<(core::integer::u8, core::integer::u128)>",
-      "members": [
-        {
-          "name": "snapshot",
-          "type": "@core::array::Array::<(core::integer::u8, core::integer::u128)>"
         }
       ]
     },
@@ -299,20 +312,6 @@
       ]
     },
     {
-      "type": "enum",
-      "name": "core::option::Option::<dojo_starter::models::Direction>",
-      "variants": [
-        {
-          "name": "Some",
-          "type": "dojo_starter::models::Direction"
-        },
-        {
-          "name": "None",
-          "type": "()"
-        }
-      ]
-    },
-    {
       "type": "interface",
       "name": "dojo::contract::components::upgradeable::IUpgradeable",
       "items": [
@@ -381,41 +380,6 @@
       "type": "interface",
       "name": "dojo::contract::interface::IContract",
       "items": []
-    },
-    {
-      "type": "struct",
-      "name": "dojo::event::event::EventDef",
-      "members": [
-        {
-          "name": "name",
-          "type": "core::byte_array::ByteArray"
-        },
-        {
-          "name": "layout",
-          "type": "dojo::meta::layout::Layout"
-        },
-        {
-          "name": "schema",
-          "type": "dojo::meta::introspect::Struct"
-        }
-      ]
-    },
-    {
-      "type": "interface",
-      "name": "dojo::event::interface::IEvent",
-      "items": [
-        {
-          "type": "function",
-          "name": "definition",
-          "inputs": [],
-          "outputs": [
-            {
-              "type": "dojo::event::event::EventDef"
-            }
-          ],
-          "state_mutability": "view"
-        }
-      ]
     },
     {
       "type": "interface",
@@ -1987,174 +1951,196 @@
       "state_mutability": "view"
     },
     {
-      "type": "enum",
-      "name": "dojo_starter::models::Direction",
-      "variants": [
-        {
-          "name": "Left",
-          "type": "()"
-        },
-        {
-          "name": "Right",
-          "type": "()"
-        },
-        {
-          "name": "Up",
-          "type": "()"
-        },
-        {
-          "name": "Down",
-          "type": "()"
-        }
-      ]
-    },
-    {
       "type": "struct",
-      "name": "dojo_starter::models::DirectionsAvailable",
+      "name": "dojo_starter::models::Civilization",
       "members": [
         {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
+          "name": "id",
+          "type": "core::integer::u32"
         },
         {
-          "name": "directions",
-          "type": "core::array::Array::<dojo_starter::models::Direction>"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::DirectionsAvailableValue",
-      "members": [
-        {
-          "name": "directions",
-          "type": "core::array::Array::<dojo_starter::models::Direction>"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::Moves",
-      "members": [
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
+          "name": "name",
+          "type": "core::felt252"
         },
         {
-          "name": "remaining",
-          "type": "core::integer::u8"
+          "name": "iron",
+          "type": "core::integer::u32"
         },
         {
-          "name": "last_direction",
-          "type": "core::option::Option::<dojo_starter::models::Direction>"
+          "name": "food",
+          "type": "core::integer::u32"
         },
         {
-          "name": "can_move",
+          "name": "wood",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "population",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_alive",
           "type": "core::bool"
         }
       ]
     },
     {
       "type": "struct",
-      "name": "dojo_starter::models::MovesValue",
+      "name": "dojo_starter::models::CivilizationValue",
       "members": [
         {
-          "name": "remaining",
-          "type": "core::integer::u8"
+          "name": "name",
+          "type": "core::felt252"
         },
         {
-          "name": "last_direction",
-          "type": "core::option::Option::<dojo_starter::models::Direction>"
+          "name": "iron",
+          "type": "core::integer::u32"
         },
         {
-          "name": "can_move",
+          "name": "food",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "wood",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "population",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_alive",
           "type": "core::bool"
         }
       ]
     },
     {
       "type": "struct",
-      "name": "dojo_starter::models::Position",
+      "name": "dojo_starter::models::TradeProposal",
       "members": [
         {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
-        },
-        {
-          "name": "vec",
-          "type": "dojo_starter::models::Vec2"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::PositionCount",
-      "members": [
-        {
-          "name": "identity",
-          "type": "core::starknet::contract_address::ContractAddress"
-        },
-        {
-          "name": "position",
-          "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::PositionCountValue",
-      "members": [
-        {
-          "name": "position",
-          "type": "core::array::Span::<(core::integer::u8, core::integer::u128)>"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::PositionValue",
-      "members": [
-        {
-          "name": "vec",
-          "type": "dojo_starter::models::Vec2"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::models::Vec2",
-      "members": [
-        {
-          "name": "x",
+          "name": "id",
           "type": "core::integer::u32"
         },
         {
-          "name": "y",
+          "name": "from_civ",
           "type": "core::integer::u32"
+        },
+        {
+          "name": "to_civ",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "offer_resource",
+          "type": "core::felt252"
+        },
+        {
+          "name": "offer_amount",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "request_resource",
+          "type": "core::felt252"
+        },
+        {
+          "name": "request_amount",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "status",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo_starter::models::TradeProposalValue",
+      "members": [
+        {
+          "name": "from_civ",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "to_civ",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "offer_resource",
+          "type": "core::felt252"
+        },
+        {
+          "name": "offer_amount",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "request_resource",
+          "type": "core::felt252"
+        },
+        {
+          "name": "request_amount",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "status",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo_starter::models::WorldState",
+      "members": [
+        {
+          "name": "id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "tick",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "trade_count",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_initialized",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo_starter::models::WorldStateValue",
+      "members": [
+        {
+          "name": "tick",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "trade_count",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_initialized",
+          "type": "core::bool"
         }
       ]
     },
     {
       "type": "event",
-      "name": "dojo_starter::models::m_DirectionsAvailable::Event",
+      "name": "dojo_starter::models::m_Civilization::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "dojo_starter::models::m_Moves::Event",
+      "name": "dojo_starter::models::m_TradeProposal::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "dojo_starter::models::m_Position::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "dojo_starter::models::m_PositionCount::Event",
+      "name": "dojo_starter::models::m_WorldState::Event",
       "kind": "enum",
       "variants": []
     },
@@ -2164,20 +2150,71 @@
       "items": [
         {
           "type": "function",
-          "name": "spawn",
+          "name": "spawn_world",
           "inputs": [],
           "outputs": [],
           "state_mutability": "external"
         },
         {
           "type": "function",
-          "name": "move",
+          "name": "propose_trade",
           "inputs": [
             {
-              "name": "direction",
-              "type": "dojo_starter::models::Direction"
+              "name": "from_civ",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "to_civ",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "offer_resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "offer_amount",
+              "type": "core::integer::u32"
+            },
+            {
+              "name": "request_resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "request_amount",
+              "type": "core::integer::u32"
             }
           ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "accept_trade",
+          "inputs": [
+            {
+              "name": "trade_id",
+              "type": "core::integer::u32"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "reject_trade",
+          "inputs": [
+            {
+              "name": "trade_id",
+              "type": "core::integer::u32"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "tick",
+          "inputs": [],
           "outputs": [],
           "state_mutability": "external"
         }
@@ -2201,42 +2238,12 @@
       ]
     },
     {
-      "type": "struct",
-      "name": "dojo_starter::systems::actions::actions::Moved",
-      "members": [
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
-        },
-        {
-          "name": "direction",
-          "type": "dojo_starter::models::Direction"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "dojo_starter::systems::actions::actions::MovedValue",
-      "members": [
-        {
-          "name": "direction",
-          "type": "dojo_starter::models::Direction"
-        }
-      ]
-    },
-    {
-      "type": "event",
-      "name": "dojo_starter::systems::actions::actions::e_Moved::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
       "type": "function",
       "name": "ensure_abi",
       "inputs": [
         {
-          "name": "event",
-          "type": "dojo_starter::systems::actions::actions::Moved"
+          "name": "model",
+          "type": "dojo_starter::models::WorldState"
         }
       ],
       "outputs": [],
@@ -2255,7 +2262,7 @@
       "inputs": [
         {
           "name": "value",
-          "type": "dojo_starter::systems::actions::actions::MovedValue"
+          "type": "dojo_starter::models::WorldStateValue"
         }
       ],
       "outputs": [],

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { CivAgent } from "./agent.ts";
+import { onchainSpawnWorld, onchainProposeTrade, onchainAcceptTrade, onchainRejectTrade, onchainTick } from "./dojo.ts";
 import type { Civilization, TradeProposal, GameEvent, WorldState } from "./types.ts";
 
 const app = new Hono();
@@ -110,6 +111,9 @@ async function runAgentTick() {
   worldState.tick++;
   console.log(`\n=== Tick ${worldState.tick} ===`);
 
+  // Record tick on-chain
+  onchainTick().catch(e => console.error("onchain tick failed:", e));
+
   // Food consumption
   consumeFood();
 
@@ -157,17 +161,24 @@ async function runAgentTick() {
           status: "pending",
         };
         worldState.pendingTrades.push(trade);
+        // Record on-chain
+        onchainProposeTrade(trade.fromCiv, trade.toCiv, trade.offerResource, trade.offerAmount, trade.requestResource, trade.requestAmount)
+          .catch(e => console.error("onchain propose failed:", e));
       } else if (action.type === "trade_accept" && agent.role === "leader") {
         const trade = worldState.pendingTrades.find(
           t => t.id === action.details.tradeId && t.status === "pending"
         );
-        if (trade) executeTrade(trade);
+        if (trade) {
+          executeTrade(trade);
+          onchainAcceptTrade(trade.id).catch(e => console.error("onchain accept failed:", e));
+        }
       } else if (action.type === "trade_reject" && agent.role === "leader") {
         const trade = worldState.pendingTrades.find(
           t => t.id === action.details.tradeId && t.status === "pending"
         );
         if (trade) {
           trade.status = "rejected";
+          onchainRejectTrade(trade.id).catch(e => console.error("onchain reject failed:", e));
         }
       } else if (action.type === "build") {
         buildStructure(agent.civId, action.details.structure, action.details.cost || { wood: 10 });
@@ -198,6 +209,9 @@ app.post("/start", async (c) => {
   tickInterval = setInterval(async () => {
     if (running) await runAgentTick();
   }, tickMs);
+  
+  // Initialize on-chain world
+  await onchainSpawnWorld().catch(e => console.error("onchain spawn failed:", e));
   
   // Run first tick immediately
   await runAgentTick();
@@ -234,4 +248,4 @@ app.post("/tick", async (c) => {
 
 const port = Number(process.env.PORT || 3002);
 console.log(`🏛️ Genesis Jam Engine running on http://localhost:${port}`);
-export default { port, hostname: "0.0.0.0", idleTimeout: 300, fetch: app.fetch };
+export default { port, hostname: "0.0.0.0", idleTimeout: 255, fetch: app.fetch };

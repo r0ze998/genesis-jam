@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import WorldMap from "./WorldMap";
 
 const API = "http://localhost:3002";
 
@@ -169,6 +170,11 @@ export default function App() {
             {btn.label}
           </button>
         ))}
+      </div>
+
+      {/* World Map */}
+      <div style={{ marginBottom: 16, textAlign: "center" }}>
+        <WorldMap civs={state.civilizations} tick={state.tick} />
       </div>
 
       {/* Main Layout */}
